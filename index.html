@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tejas Niranjan | Neural Portfolio</title>
+    <style>
+        /* --- CORE FUTURISTIC STYLES --- */
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-purple: #bc13fe;
+            --gold: #ffd700;
+            --bg-color: #050505;
+            --text-main: #e0e0e0;
+            --panel-bg: rgba(20, 20, 25, 0.85);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; }
+        body { background-color: var(--bg-color); color: var(--text-main); overflow-x: hidden; cursor: none; }
+        
+        a { color: var(--neon-blue); text-decoration: none; transition: 0.3s; cursor: none; }
+        a:hover { color: var(--neon-purple); text-shadow: 0 0 8px var(--neon-purple); }
+
+        /* Custom Cursor */
+        .cursor {
+            width: 20px; height: 20px; border: 2px solid var(--neon-blue); border-radius: 50%;
+            position: fixed; pointer-events: none; transform: translate(-50%, -50%);
+            transition: width 0.2s, height 0.2s, background-color 0.2s; z-index: 9999;
+            box-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        /* Navigation */
+        .nav-container {
+            display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; padding: 20px;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.2); position: sticky; top: 0; background: rgba(5,5,5,0.9); z-index: 1000;
+        }
+        .tab-btn {
+            background: transparent; color: var(--text-main); border: 1px solid transparent;
+            padding: 10px 15px; font-size: 1rem; cursor: none; transition: all 0.3s ease; text-transform: uppercase;
+        }
+        .tab-btn:hover, .tab-btn.active { border-bottom: 2px solid var(--neon-purple); color: var(--neon-purple); text-shadow: 0 0 8px var(--neon-purple); }
+
+        /* Sections & Layout */
+        .section { display: none; padding: 60px 20px; max-width: 1100px; margin: 0 auto; min-height: 80vh; }
+        .section.active { display: block; animation: fadeIn 0.6s ease forwards; }
+
+        h1 { font-size: 2.5rem; text-transform: uppercase; color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); margin-bottom: 30px; border-bottom: 1px solid rgba(0, 243, 255, 0.3); padding-bottom: 10px;}
+        h2 { font-size: 1.5rem; color: var(--neon-purple); margin-bottom: 15px; }
+
+        /* Scroll Animations (Observer Classes) */
+        .hidden-scroll { opacity: 0; transform: translateY(40px) scale(0.95); transition: all 0.8s cubic-bezier(0.5, 0, 0, 1); }
+        .show-scroll { opacity: 1; transform: translateY(0) scale(1); }
+
+        /* Home Auto-Type */
+        #typewriter { font-size: 1.2rem; color: #aaa; min-height: 60px; margin-bottom: 20px; }
+        .highlight { color: var(--gold); font-weight: bold; }
+
+        /* Tables & Grid Cards */
+        .olympiad-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: var(--panel-bg); }
+        .olympiad-table th, .olympiad-table td { padding: 15px; border: 1px solid rgba(188, 19, 254, 0.3); text-align: left; }
+        .olympiad-table th { color: var(--neon-purple); }
+        .olympiad-table tr { transition: 0.3s; }
+        .olympiad-table tr:hover { background: rgba(255, 215, 0, 0.1); border-color: var(--gold); box-shadow: 0 0 15px rgba(255, 215, 0, 0.3); }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .card { background: var(--panel-bg); border: 1px solid rgba(0, 243, 255, 0.3); padding: 25px; border-radius: 5px; transition: transform 0.4s, box-shadow 0.4s; }
+        .card:hover { transform: translateY(-10px); box-shadow: 0 0 20px rgba(0, 243, 255, 0.5); border-color: var(--neon-blue); }
+
+        /* Contact Box */
+        .contact-form { display: flex; flex-direction: column; gap: 15px; background: var(--panel-bg); padding: 30px; border: 1px solid var(--neon-purple); }
+        .contact-form input, .contact-form textarea { background: rgba(0,0,0,0.5); border: 1px solid var(--neon-blue); color: white; padding: 15px; outline: none; }
+        .contact-form button { background: transparent; border: 2px solid var(--neon-blue); color: var(--neon-blue); padding: 15px; cursor: none; text-transform: uppercase; font-weight: bold; transition: 0.3s; }
+        .contact-form button:hover { background: var(--neon-blue); color: black; box-shadow: 0 0 15px var(--neon-blue); }
+
+        /* Chat UI */
+        .chat-container { background: var(--panel-bg); border: 1px solid var(--neon-blue); height: 400px; display: flex; flex-direction: column; }
+        .chat-history { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .message { padding: 10px 15px; border-radius: 5px; max-width: 80%; }
+        .user-msg { background: rgba(0, 243, 255, 0.1); border: 1px solid var(--neon-blue); align-self: flex-end; }
+        .ai-msg { background: rgba(188, 19, 254, 0.1); border: 1px solid var(--neon-purple); align-self: flex-start; }
+        .chat-input-area { display: flex; padding: 10px; border-top: 1px solid rgba(0, 243, 255, 0.2); }
+        .chat-input-area input { flex-grow: 1; background: transparent; border: none; color: white; padding: 10px; outline: none; }
+        .chat-input-area button { background: transparent; border: 1px solid var(--neon-blue); color: var(--neon-blue); padding: 10px 20px; cursor: none; }
+
+        footer { text-align: center; padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 40px; font-size: 0.8rem; color: #666; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div class="cursor" id="customCursor"></div>
+
+    <nav class="nav-container">
+        <button class="tab-btn active" onclick="openTab('home')">Sys.Profile</button>
+        <button class="tab-btn" onclick="openTab('academics')">Data.Academics</button>
+        <button class="tab-btn" onclick="openTab('projects')">Exec.Projects</button>
+        <button class="tab-btn" onclick="openTab('music')">Audio.Music</button>
+        <button class="tab-btn" onclick="openTab('contact')">Net.Contact</button>
+        <button class="tab-btn" onclick="openTab('ai-chat')">AI.Terminal</button>
+    </nav>
+
+    <div id="home" class="section active">
+        <h1 class="hidden-scroll">Tejas Niranjan</h1>
+        <div id="typewriter"></div>
+        <div class="hidden-scroll" style="margin-top: 30px;">
+            <h2>System Parameters</h2>
+            <p><strong>Location:</strong> Rani Laxmibai Public School, Jhansi (284001)</p>
+            <p><strong>Clearance Level:</strong> 8th Grade</p>
+            <p><strong>Core Directives:</strong> Reading Biographies, Task-based Coding, Developing solutions for real-life problems.</p>
+        </div>
+    </div>
+
+    <div id="academics" class="section">
+        <h1 class="hidden-scroll">Academic Triumphs</h1>
+        <p class="hidden-scroll">Science Olympiad Foundation (SOF) Hall of Records.</p>
+        <table class="olympiad-table hidden-scroll">
+            <tr><th>Grade</th><th>Achievements</th></tr>
+            <tr class="hidden-scroll"><td>1st</td><td><span class="highlight">Gold</span> in NSO and IMO</td></tr>
+            <tr class="hidden-scroll"><td>2nd</td><td><span class="highlight">Gold</span> in NSO and IMO</td></tr>
+            <tr class="hidden-scroll"><td>3rd</td><td><span class="highlight">Gold</span> in NSO, IMO, NCO</td></tr>
+            <tr class="hidden-scroll"><td>4th</td><td><span class="highlight">Gold</span> in NSO, IMO, NCO, IEO</td></tr>
+            <tr class="hidden-scroll"><td>5th</td><td><span class="highlight">Gold</span> in NSO, IMO</td></tr>
+            <tr class="hidden-scroll"><td>6th</td><td><span class="highlight">Gold</span> in NSO and IMO</td></tr>
+            <tr class="hidden-scroll"><td>7th</td><td><span class="highlight">Gold</span> in NSO</td></tr>
+        </table>
+    </div>
+
+    <div id="projects" class="section">
+        <h1 class="hidden-scroll">Project Matrix</h1>
+        <div class="grid">
+            <div class="card hidden-scroll">
+                <h2>Car Parking Project</h2>
+                <p>Hardware & Software fusion. A smart infrastructure solution designed to monitor and manage spatial constraints in real-time.</p>
+            </div>
+            <div class="card hidden-scroll">
+                <h2>IoT Auto Plant Irrigation</h2>
+                <p>Automated agricultural solution utilizing IoT to monitor environmental metrics and dispense water autonomously.</p>
+                <a href="https://tejasblynk.github.io/IoT-Based-Irrigation/" target="_blank">[Initialize Link]</a>
+            </div>
+            <div class="card hidden-scroll">
+                <h2>Neon Math OS Calculator</h2>
+                <p>A sleek, web-based calculator operating system designed for complex mathematical operations featuring a futuristic neon UI.</p>
+                <a href="https://tejasblynk.github.io/calculator/" target="_blank">[Initialize Link]</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="music" class="section">
+        <h1 class="hidden-scroll">Audio Resonance</h1>
+        <div class="card hidden-scroll" style="text-align: center; padding: 50px;">
+            <h2>Pianist & Synthesizer Controller</h2>
+            <p style="margin: 20px 0;">Broadcasting audio logs to the global network.</p>
+            <a href="https://www.youtube.com/@tejasmusicalworld468" target="_blank" style="font-size: 1.5rem; color: var(--gold); border: 1px solid var(--gold); padding: 15px 30px;">Access @tejasmusicalworld468</a>
+        </div>
+    </div>
+
+    <div id="contact" class="section">
+        <h1 class="hidden-scroll">Establish Connection</h1>
+        <p class="hidden-scroll">Direct line via: <a href="mailto:tejas.blynk@gmail.com">tejas.blynk@gmail.com</a></p>
+        
+        <form class="contact-form hidden-scroll" style="margin-top: 30px;" action="https://formspree.io/f/xlgpqpnn" method="POST">
+            <input type="text" name="name" placeholder="Enter Designation (Name)" required>
+            <input type="email" name="email" placeholder="Enter Return Coordinates (Email)" required>
+            <textarea name="message" rows="5" placeholder="Input Transmission Data (Message)..." required></textarea>
+            <button type="submit">Transmit Data</button>
+        </form>
+    </div>
+
+    <div id="ai-chat" class="section">
+        <h1 class="hidden-scroll">Personal AI Construct</h1>
+        <div class="chat-container hidden-scroll">
+            <div class="chat-history" id="chatHistory">
+                <div class="message ai-msg">System online. I am the AI construct for Tejas Niranjan. Query my database.</div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" placeholder="Enter query..." onkeypress="handleEnter(event)">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        &copy; <span id="year"></span> Tejas Niranjan. All Systems Operational. Unauthorized duplication prohibited.
+    </footer>
+
+    <script>
+        document.getElementById('year').innerText = new Date().getFullYear();
+
+        // Cursor Logic
+        const cursor = document.getElementById('customCursor');
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px'; cursor.style.top = e.clientY + 'px';
+        });
+
+        document.querySelectorAll('button, input, a, textarea').forEach(el => {
+            el.addEventListener('mouseenter', () => { cursor.style.transform = 'translate(-50%, -50%) scale(1.5)'; cursor.style.backgroundColor = 'rgba(0, 243, 255, 0.2)'; });
+            el.addEventListener('mouseleave', () => { cursor.style.transform = 'translate(-50%, -50%) scale(1)'; cursor.style.backgroundColor = 'transparent'; });
+        });
+
+        // Tab Navigation
+        function openTab(tabId) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+            runScrollAnimations(); // Re-trigger animations on tab change
+        }
+
+        // Auto-Type Effect for Home
+        const typeText = "> Initializing profile...\n> Pianist | Coder | Robotics Developer\n> Status: Online.";
+        let i = 0;
+        function typeWriter() {
+            if (i < typeText.length) {
+                document.getElementById("typewriter").innerHTML += typeText.charAt(i) === '\n' ? '<br>' : typeText.charAt(i);
+                i++;
+                setTimeout(typeWriter, 50);
+            }
+        }
+        setTimeout(typeWriter, 500);
+
+        // Scroll Intersection Observer (Triumphant Animations)
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('show-scroll');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        function runScrollAnimations() {
+            document.querySelectorAll('.hidden-scroll').forEach((el) => observer.observe(el));
+        }
+        runScrollAnimations();
+
+        // AI Chat Frontend Logic
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (message === '') return;
+
+            const chatHistory = document.getElementById('chatHistory');
+            chatHistory.innerHTML += `<div class="message user-msg">${message}</div>`;
+            input.value = ''; chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message ai-msg'; loadingDiv.textContent = "Processing...";
+            chatHistory.appendChild(loadingDiv); chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            try {
+                // Ensure your Node.js server is running on port 3000 for this to work!
+                const response = await fetch('http://localhost:3000/api/chat', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+                const data = await response.json();
+                loadingDiv.textContent = data.reply;
+            } catch (error) {
+                loadingDiv.textContent = "Error: Matrix uplink failed. Check backend server.";
+            }
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        function handleEnter(event) { if (event.key === 'Enter') sendMessage(); }
+    </script>
+</body>
+</html>
