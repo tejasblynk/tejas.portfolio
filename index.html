@@ -2,384 +2,760 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tejas Niranjan | Neural Interface</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TEJAS_OS // OMNI_SINGULARITY</title>
+    
+    <!-- Premium Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;700&family=Space+Grotesk:wght@300;400;600;700&family=Syncopate:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <!-- High-Performance Engine Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/@studio-freight/lenis@1.0.32/dist/lenis.min.js"></script>
+
     <style>
-        /* --- ELITE SYSTEM VARIABLES --- */
+        /* --- SYSTEM VARIABLES --- */
         :root {
-            --cyan: #0ff;
-            --magenta: #f0f;
+            --cyan: #00f3ff;
+            --purple: #bc13fe;
             --gold: #ffd700;
-            --bg-void: #020204;
-            --surface: rgba(10, 10, 15, 0.6);
-            --grid-line: rgba(0, 255, 255, 0.05);
+            --alert: #ff003c;
+            --bg: #030305;
+            --panel: rgba(5, 5, 10, 0.85); /* Darkened for better contrast */
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(0, 243, 255, 0.15);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Courier New', monospace; }
+        /* --- GLOBAL RESET & SMOOTH SCROLL --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html.lenis { height: auto; }
+        .lenis.lenis-smooth { scroll-behavior: auto; }
+        .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+        .lenis.lenis-stopped { overflow: hidden; }
+
+        body { 
+            background-color: var(--bg); color: #fff; 
+            font-family: 'Space Grotesk', sans-serif; 
+            overflow-x: hidden; cursor: none;
+            -webkit-font-smoothing: antialiased;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8); /* Global shadow for legibility */
+        }
+
+        /* --- PERSISTENT HUD --- */
+        .hud-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9998; border: 1px solid var(--border); }
+        .hud-corner { position: absolute; width: 50px; height: 50px; border: 2px solid transparent; }
+        .hud-tl { top: 20px; left: 20px; border-top-color: var(--cyan); border-left-color: var(--cyan); }
+        .hud-tr { top: 20px; right: 20px; border-top-color: var(--cyan); border-right-color: var(--cyan); }
+        .hud-bl { bottom: 20px; left: 20px; border-bottom-color: var(--cyan); border-left-color: var(--cyan); }
+        .hud-br { bottom: 20px; right: 20px; border-bottom-color: var(--cyan); border-right-color: var(--cyan); }
         
-        body { background-color: var(--bg-void); color: #fff; overflow-x: hidden; cursor: none; }
+        .hud-grid { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: -1; background-image: linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px); background-size: 50px 50px; perspective: 1000px; }
+        .scanline { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.2) 51%); background-size: 100% 4px; pointer-events: none; z-index: 9999; opacity: 0.3; }
 
-        /* --- QUANTUM CANVAS & GRID --- */
-        #quantum-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2; }
-        .grid-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none;
-            background-image: 
-                linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
-                linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
-            background-size: 50px 50px; transform: perspective(500px) rotateX(60deg);
-            transform-origin: bottom; animation: gridMove 10s linear infinite; opacity: 0.3;
-        }
-        @keyframes gridMove { from { transform: perspective(500px) rotateX(60deg) translateY(0); } to { transform: perspective(500px) rotateX(60deg) translateY(50px); } }
+        /* --- APEX TOUCHES: RADAR, SHOCKWAVE, SCROLL PROGRESS --- */
+        .hud-radar { position: fixed; bottom: 30px; right: 30px; width: 90px; height: 90px; border-radius: 50%; border: 1px solid rgba(0, 243, 255, 0.3); pointer-events: none; z-index: 9998; background: rgba(0, 243, 255, 0.02); overflow: hidden; box-shadow: 0 0 20px rgba(0,243,255,0.1) inset; display: none; }
+        .hud-radar::before { content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: rgba(0,243,255,0.2); }
+        .hud-radar::after { content: ''; position: absolute; top: 0; left: 50%; width: 1px; height: 100%; background: rgba(0,243,255,0.2); }
+        .radar-sweep { position: absolute; top: 50%; left: 50%; width: 50%; height: 50%; background: conic-gradient(from 0deg, transparent 70%, rgba(0,243,255,0.8) 100%); transform-origin: 0 0; animation: radarSpin 3s linear infinite; }
+        .radar-dot { position: absolute; width: 4px; height: 4px; background: var(--alert); border-radius: 50%; box-shadow: 0 0 8px var(--alert); animation: blink 2s infinite; top: 30%; left: 60%; }
+        @keyframes radarSpin { 100% { transform: rotate(360deg); } }
 
-        /* --- TARGETING CURSOR --- */
-        .cursor-crosshair {
-            width: 30px; height: 30px; position: fixed; pointer-events: none; z-index: 10000;
-            transform: translate(-50%, -50%); transition: transform 0.1s ease-out;
-        }
-        .cursor-crosshair::before, .cursor-crosshair::after { content: ''; position: absolute; background: var(--cyan); }
-        .cursor-crosshair::before { top: 50%; left: 0; width: 100%; height: 1px; }
-        .cursor-crosshair::after { left: 50%; top: 0; width: 1px; height: 100%; }
+        .scroll-progress-container { position: fixed; right: 0; top: 0; width: 3px; height: 100vh; background: rgba(255,255,255,0.05); z-index: 9999; pointer-events: none; }
+        .scroll-progress-bar { width: 100%; height: 0%; background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
 
-        /* --- AEROSPACE NAVIGATION --- */
-        .nav-container {
-            position: fixed; top: 0; width: 100%; z-index: 1000; display: flex; justify-content: center; gap: 20px;
-            padding: 15px; background: linear-gradient(180deg, #000 0%, transparent 100%);
-            border-bottom: 1px solid rgba(0,255,255,0.1); backdrop-filter: blur(5px);
-        }
-        .tab-btn {
-            background: transparent; color: #555; border: 1px solid transparent; padding: 8px 15px;
-            font-size: 0.9rem; cursor: none; text-transform: uppercase; font-weight: bold; letter-spacing: 2px;
-            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%); transition: 0.3s;
-        }
-        .tab-btn:hover, .tab-btn.active { color: var(--cyan); border: 1px solid var(--cyan); background: rgba(0,255,255,0.05); text-shadow: 0 0 8px var(--cyan); box-shadow: 0 0 15px rgba(0,255,255,0.2) inset; }
+        .click-shockwave { position: fixed; border: 1px solid var(--cyan); border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 999999; box-shadow: 0 0 15px var(--cyan) inset; }
 
-        /* --- UI ARCHITECTURE --- */
-        .section { display: none; padding: 120px 5% 80px; max-width: 1400px; margin: 0 auto; min-height: 100vh; }
-        .section.active { display: block; animation: hologramFade 0.6s ease-out forwards; }
-        @keyframes hologramFade { 0% { opacity: 0; filter: blur(10px); transform: scale(0.98); } 100% { opacity: 1; filter: blur(0); transform: scale(1); } }
+        /* --- MAGNETIC CURSOR --- */
+        #cursor-dot { position: fixed; width: 4px; height: 4px; background: var(--cyan); border-radius: 50%; pointer-events: none; z-index: 100001; transform: translate(-50%, -50%); box-shadow: 0 0 10px var(--cyan); }
+        #cursor-ring { position: fixed; width: 40px; height: 40px; border: 1px solid rgba(0, 243, 255, 0.5); border-radius: 50%; pointer-events: none; z-index: 100000; transform: translate(-50%, -50%); transition: width 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), height 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.3s; mix-blend-mode: difference; }
+        .cursor-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Fira Code', monospace; font-size: 8px; color: var(--cyan); opacity: 0; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
 
-        /* --- GLITCH TITLE --- */
-        .glitch-wrapper { position: relative; display: inline-block; margin-bottom: 30px; }
-        .glitch-text { font-size: 5rem; font-weight: 900; text-transform: uppercase; color: #fff; letter-spacing: -3px; position: relative; }
-        .glitch-text::before, .glitch-text::after {
-            content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-void);
-        }
-        .glitch-text::before { left: 3px; text-shadow: -2px 0 var(--magenta); clip: rect(24px, 550px, 90px, 0); animation: glitch-anim 3s infinite linear alternate-reverse; }
-        .glitch-text::after { left: -3px; text-shadow: -2px 0 var(--cyan); clip: rect(85px, 550px, 140px, 0); animation: glitch-anim 2.5s infinite linear alternate-reverse; }
-        @keyframes glitch-anim {
-            0% { clip: rect(10px, 9999px, 80px, 0); } 20% { clip: rect(40px, 9999px, 20px, 0); }
-            40% { clip: rect(90px, 9999px, 50px, 0); } 60% { clip: rect(20px, 9999px, 100px, 0); }
-            80% { clip: rect(80px, 9999px, 30px, 0); } 100% { clip: rect(30px, 9999px, 90px, 0); }
-        }
+        /* --- BOOT SEQUENCE PRELOADER --- */
+        #boot-screen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #010101; z-index: 1000000; display: flex; flex-direction: column; justify-content: flex-end; padding: 40px; font-family: 'Fira Code', monospace; font-size: 14px; color: var(--cyan); }
+        .boot-console { height: 80vh; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; }
+        .boot-line { margin-bottom: 5px; opacity: 0.8; }
+        .boot-glitch { font-size: clamp(2rem, 6vw, 4rem); font-family: 'Syncopate', sans-serif; font-weight: 900; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; opacity: 0; text-shadow: 3px 0 var(--alert), -3px 0 var(--cyan); mix-blend-mode: screen; letter-spacing: -2px;}
 
-        h2 { font-size: 1.5rem; color: var(--cyan); margin-bottom: 10px; text-transform: uppercase; border-left: 3px solid var(--magenta); padding-left: 10px; }
-        p { color: #a0a0a0; font-size: 1rem; line-height: 1.6; }
-        a { color: var(--gold); text-decoration: none; cursor: none; transition: 0.3s; }
-        a:hover { text-shadow: 0 0 10px var(--gold); }
+        /* --- WEBGL --- */
+        #webgl-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2; pointer-events: none; }
 
-        /* --- 3D KINEMATIC CARDS --- */
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 40px; margin-top: 40px; perspective: 1000px; }
+        /* --- NAVIGATION --- */
+        header { position: fixed; top: 0; width: 100%; padding: 30px 5%; display: flex; justify-content: space-between; align-items: center; z-index: 1000; mix-blend-mode: difference; }
+        .logo-wrapper { display: flex; align-items: center; gap: 15px; }
+        .logo-icon { width: 30px; height: 30px; border: 2px solid var(--cyan); animation: spin 10s linear infinite; position: relative;}
+        .logo-icon::after { content: ''; position: absolute; top: 5px; left: 5px; width: 16px; height: 16px; border: 1px solid var(--purple); animation: spin 5s linear infinite reverse;}
+        .logo { font-family: 'Syncopate', sans-serif; font-size: 1.2rem; font-weight: 900; letter-spacing: 4px; }
+        .nav-links { display: flex; gap: 40px; }
+        .nav-link { font-family: 'Fira Code', monospace; color: #fff; text-decoration: none; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; position: relative; padding: 5px; cursor: none; text-shadow: none; }
+
+        /* --- TYPOGRAPHY & TAGS --- */
+        h1, h2, h3 { font-family: 'Syncopate', sans-serif; text-transform: uppercase; font-weight: 900; line-height: 0.9; }
+        .section-tag { font-family: 'Fira Code', monospace; color: var(--gold); font-size: 0.85rem; margin-bottom: 30px; display: inline-flex; align-items: center; gap: 10px; border: 1px solid rgba(255,215,0,0.3); padding: 8px 20px; border-radius: 4px; background: rgba(255,215,0,0.1); text-transform: uppercase; letter-spacing: 1px; backdrop-filter: blur(5px); }
+        .section-tag::before { content: ''; width: 6px; height: 6px; background: var(--gold); box-shadow: 0 0 10px var(--gold); animation: blink 1.5s infinite; }
+        .scramble-title { min-width: 50px; display: inline-block; }
+
+        /* --- HERO SECTION --- */
+        .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 120px 10% 40px; position: relative; z-index: 1; }
+        .hero::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at left center, rgba(0,0,0,0.7) 0%, transparent 70%); z-index: 0; pointer-events: none; } /* Contrast overlay */
+        .hero-title-wrap { position: relative; margin-left: -5px; z-index: 2;}
+        .hero h1 { font-size: clamp(3rem, 12vw, 13rem); letter-spacing: -2px; position: relative; z-index: 2; line-height: 1.1; word-wrap: break-word; }
+        .hero .outline { color: transparent; -webkit-text-stroke: 2px rgba(255,255,255,0.7); text-shadow: 0 0 20px rgba(0, 243, 255, 0.4); z-index: 1; }
+        .hero-desc { max-width: 600px; font-size: clamp(1rem, 2vw, 1.2rem); color: #ddd; margin-top: 30px; line-height: 1.6; font-weight: 400; border-left: 2px solid var(--cyan); padding-left: 20px; z-index: 2; position: relative; background: rgba(0,0,0,0.3); padding-top: 10px; padding-bottom: 10px; border-radius: 0 8px 8px 0;}
         
-        .tilt-card {
-            background: var(--surface); border: 1px solid rgba(255,255,255,0.1);
-            padding: 40px; transform-style: preserve-3d;
-            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
-            position: relative; transition: border-color 0.3s;
-        }
-        .tilt-card::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--cyan), transparent); opacity: 0.5;
-        }
-        .tilt-card:hover { border-color: var(--cyan); box-shadow: 0 20px 40px rgba(0,0,0,0.8); }
-        
-        /* Inner 3D pop-out effect */
-        .card-content { transform: translateZ(50px); }
+        .btn-svg-wrap { margin-top: 50px; position: relative; display: inline-block; cursor: none; z-index: 2; }
+        .btn-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        .btn-svg rect { fill: none; stroke: var(--cyan); stroke-width: 1; stroke-dasharray: 600; stroke-dashoffset: 600; transition: stroke-dashoffset 0.6s cubic-bezier(0.77, 0, 0.175, 1); }
+        .btn-prime { display: inline-flex; align-items: center; justify-content: center; padding: 20px 40px; background: rgba(0,243,255,0.1); color: var(--cyan); font-family: 'Fira Code', monospace; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; text-decoration: none; text-shadow: none; }
+        .btn-svg-wrap:hover .btn-svg rect { stroke-dashoffset: 0; }
+        .btn-svg-wrap:hover .btn-prime { background: rgba(0,243,255,0.25); color: #fff; box-shadow: 0 0 30px rgba(0,243,255,0.4); }
 
-        /* --- OLYMPIAD DATA MATRIX --- */
-        .data-matrix { width: 100%; border-collapse: separate; border-spacing: 0 8px; margin-top: 20px; }
-        .data-matrix th, .data-matrix td { padding: 15px 20px; background: rgba(20,20,25,0.8); border: 1px solid rgba(0,255,255,0.1); text-align: left; }
-        .data-matrix th { color: var(--magenta); text-transform: uppercase; letter-spacing: 1px; font-size: 0.8rem; }
-        .data-matrix tr { transition: transform 0.2s, box-shadow 0.2s; }
-        .data-matrix tr:hover { transform: scale(1.02) translateX(10px); box-shadow: -5px 0 0 var(--gold); border-color: var(--cyan); }
-        .highlight { color: var(--gold); font-weight: bold; text-shadow: 0 0 5px rgba(255,215,0,0.5); }
+        /* --- SYSTEM TELEMETRY (DATA GRID) --- */
+        .telemetry { padding: 100px 10%; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: rgba(5,5,10,0.75); backdrop-filter: blur(15px); }
+        .telemetry-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 40px; }
+        .stat-card { border-left: 2px solid var(--border); padding-left: 20px; }
+        .stat-num { font-family: 'Syncopate', sans-serif; font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 900; color: var(--cyan); display: flex; align-items: flex-start; text-shadow: 0 0 15px rgba(0,243,255,0.4); }
+        .stat-num span.plus { font-size: clamp(1.5rem, 3vw, 2rem); color: var(--purple); margin-top: 10px; margin-left: 5px; text-shadow: 0 0 15px rgba(188,19,254,0.4); }
+        .stat-label { font-family: 'Fira Code', monospace; color: #ddd; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 10px; }
 
-        /* --- TERMINAL UI --- */
-        .terminal {
-            background: rgba(5,5,8,0.9); border: 1px solid var(--cyan); height: 500px; display: flex; flex-direction: column;
-            clip-path: polygon(0 20px, 20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
-            box-shadow: inset 0 0 20px rgba(0,255,255,0.05);
+        /* --- HORIZONTAL ACADEMICS TIMELINE --- */
+        .academics-container { overflow: hidden; background: var(--bg); position: relative; padding-top: 50px;}
+        .academics-pin { height: 100vh; display: flex; align-items: center; padding-left: 10%; width: max-content; padding-right: 20vw; }
+        .timeline-header { width: clamp(300px, 40vw, 400px); flex-shrink: 0; margin-right: 100px; }
+        .timeline-item { width: clamp(300px, 60vw, 500px); flex-shrink: 0; padding: 50px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; margin-right: 50px; position: relative; overflow: hidden; transform-style: preserve-3d; backdrop-filter: blur(20px); box-shadow: 0 20px 40px rgba(0,0,0,0.8); }
+        .timeline-item::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, var(--purple), var(--cyan)); }
+        .t-phase { font-family: 'Fira Code', monospace; color: var(--cyan); font-size: 1rem; margin-bottom: 20px; display: block; }
+        .t-title { font-size: clamp(1.5rem, 3vw, 2.5rem); color: #fff; margin-bottom: 20px; line-height: 1.2; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
+        .t-desc { color: #ddd; font-size: 1.1rem; line-height: 1.6; }
+        .t-medal { display: inline-block; margin-top: 20px; margin-right: 10px; padding: 5px 15px; border: 1px solid var(--gold); color: var(--gold); font-family: 'Fira Code', monospace; font-size: 0.8rem; background: rgba(255,215,0,0.15); text-shadow: none; }
+
+        /* --- ARCHITECTURE PROJECTS --- */
+        .projects { padding: 150px 10%; }
+        .project-card { display: flex; gap: 80px; margin-bottom: 200px; align-items: center; position: relative; }
+        .project-card:nth-child(even) { flex-direction: row-reverse; }
+        
+        .project-visual-wrap { flex: 1.2; position: relative; transform-style: preserve-3d; perspective: 1500px; width: 100%; }
+        .project-visual { width: 100%; height: clamp(350px, 50vh, 650px); border-radius: 8px; overflow: hidden; position: relative; transform: translateZ(50px); box-shadow: 0 30px 60px rgba(0,0,0,0.9); border: 1px solid rgba(255,255,255,0.1); }
+        .project-img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%) contrast(1.2); transition: 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
+        .project-visual:hover .project-img { filter: grayscale(0%) contrast(1.1); transform: scale(1.05); }
+        
+        .tech-marquee-wrap { position: absolute; bottom: 30px; left: -20px; width: calc(100% + 40px); background: var(--cyan); color: #000; padding: 10px 0; transform: rotate(-3deg); overflow: hidden; z-index: 10; display: flex; box-shadow: 0 10px 20px rgba(0,0,0,0.5); text-shadow: none; }
+        .tech-marquee { display: flex; font-family: 'Syncopate', sans-serif; font-weight: 700; font-size: 1rem; white-space: nowrap; animation: scrollLeft 15s linear infinite; }
+        .tech-marquee span { margin: 0 20px; }
+        @keyframes scrollLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        
+        .project-info { flex: 0.8; background: rgba(0,0,0,0.4); padding: 30px; border-radius: 12px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
+        .project-num { font-family: 'Syncopate', sans-serif; font-size: clamp(4rem, 8vw, 6rem); font-weight: 900; color: transparent; -webkit-text-stroke: 1px rgba(255,255,255,0.2); margin-bottom: -30px; display: block; z-index: -1; position: relative; }
+        .project-title { font-size: clamp(2rem, 4vw, 4rem); margin-bottom: 20px; line-height: 1; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
+        .project-desc { font-size: 1.15rem; color: #ddd; line-height: 1.8; margin-bottom: 40px; }
+
+        /* --- AUDIO FREQUENCY SECTION --- */
+        .audio-sec { padding: 150px 10%; text-align: center; position: relative; overflow: hidden; border-top: 1px solid var(--border); background: rgba(0,0,0,0.3); }
+        .audio-bg-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 20vw; font-family: 'Syncopate', sans-serif; font-weight: 900; color: rgba(255,255,255,0.03); white-space: nowrap; pointer-events: none; }
+        .visualizer { display: flex; justify-content: center; gap: 6px; margin: 60px 0; height: 120px; align-items: flex-end; }
+        .v-bar { width: 12px; background: linear-gradient(to top, var(--cyan), var(--purple)); border-radius: 4px 4px 0 0; box-shadow: 0 0 20px rgba(188,19,254,0.4); transform-origin: bottom; }
+
+        /* --- INTERACTIVE AI TERMINAL --- */
+        .terminal-sec { padding: 100px 10% 150px; display: flex; justify-content: center; position: relative; z-index: 10; }
+        .terminal-ui { width: 100%; max-width: 1200px; background: rgba(5,5,10,0.9); border: 1px solid var(--cyan); border-radius: 8px; backdrop-filter: blur(30px); display: flex; flex-direction: column; height: 70vh; max-height: 700px; box-shadow: 0 50px 100px rgba(0,0,0,0.9); overflow: hidden; }
+        .t-header { padding: 15px 25px; background: rgba(0,243,255,0.1); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-family: 'Fira Code', monospace; font-size: 0.85rem; color: var(--cyan); letter-spacing: 1px; text-shadow: none; }
+        .t-dots { display: flex; gap: 8px; }
+        .t-dot { width: 12px; height: 12px; border-radius: 50%; background: #444; }
+        .t-dot:nth-child(1) { background: #ff5f56; } .t-dot:nth-child(2) { background: #ffbd2e; } .t-dot:nth-child(3) { background: #27c93f; }
+        
+        .t-body { flex: 1; padding: 40px; overflow-y: auto; font-family: 'Fira Code', monospace; color: #eee; font-size: 1.05rem; line-height: 1.8; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; text-shadow: none; }
+        .msg-sys { color: #aaa; }
+        .msg-sys span { color: var(--gold); }
+        .msg-cmd { color: var(--purple); }
+        .msg-usr { display: flex; gap: 15px; color: #fff; }
+        .msg-usr span { color: var(--cyan); font-weight: bold; }
+        
+        .t-input { display: flex; padding: 25px 40px; border-top: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.8); align-items: center; }
+        .t-input span { color: var(--cyan); font-family: 'Fira Code', monospace; margin-right: 20px; font-weight: bold; text-shadow: none;}
+        .t-input input { flex: 1; background: transparent; border: none; outline: none; color: #fff; font-family: 'Fira Code', monospace; font-size: 1.2rem; text-shadow: none;}
+        
+        .t-body::-webkit-scrollbar { width: 8px; }
+        .t-body::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        .t-body::-webkit-scrollbar-thumb { background: var(--cyan); border-radius: 4px; }
+
+        footer { text-align: center; padding: 40px; font-family: 'Fira Code', monospace; color: #777; border-top: 1px solid rgba(255,255,255,0.05); text-shadow: none; }
+
+
+        /* =========================================
+           RESPONSIVE DESIGN (MOBILE & TABLET CORE)
+           ========================================= */
+        @media (max-width: 992px) {
+            .project-card, .project-card:nth-child(even) { flex-direction: column; gap: 40px; margin-bottom: 150px; }
+            .project-info { width: 100%; }
         }
-        .terminal-header { background: rgba(0,255,255,0.1); padding: 10px 20px; color: var(--cyan); font-size: 0.8rem; text-transform: uppercase; border-bottom: 1px solid var(--cyan); display: flex; justify-content: space-between; }
-        .terminal-body { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; font-size: 0.95rem; }
-        .msg { padding: 10px 15px; border-left: 2px solid; max-width: 85%; }
-        .sys-msg { border-color: var(--magenta); color: #ddd; align-self: flex-start; background: rgba(255,0,255,0.05); }
-        .usr-msg { border-color: var(--cyan); color: var(--cyan); align-self: flex-end; background: rgba(0,255,255,0.05); text-align: right; }
-        
-        .terminal-input { display: flex; padding: 15px; background: rgba(0,0,0,0.5); border-top: 1px solid rgba(0,255,255,0.2); }
-        .terminal-input span { color: var(--magenta); margin-right: 10px; font-weight: bold; }
-        .terminal-input input { flex-grow: 1; background: transparent; border: none; color: #fff; outline: none; font-family: inherit; }
-        
+
+        @media (max-width: 768px) {
+            header { flex-direction: column; padding: 15px 5%; gap: 15px; background: rgba(3,3,5,0.9); }
+            .nav-links { flex-wrap: wrap; justify-content: center; gap: 15px; }
+            
+            .telemetry, .projects, .audio-sec, .terminal-sec { padding: 80px 5%; }
+            .hero { padding-top: 130px; justify-content: flex-start; }
+            .hero h1 { letter-spacing: 0px; }
+            .hero .outline { -webkit-text-stroke: 1.5px rgba(255,255,255,0.9); text-shadow: 0 0 10px rgba(0, 243, 255, 0.5); }
+            .hero-desc { background: rgba(0,0,0,0.6); }
+            
+            .academics-pin { padding-left: 5%; padding-right: 5%; }
+            .timeline-header { width: 90vw; margin-right: 30px; }
+            .timeline-item { width: 85vw; padding: 30px; margin-right: 20px; }
+            .t-title { font-size: 1.8rem; }
+            .t-desc { font-size: 1rem; }
+
+            .hud-radar { width: 60px; height: 60px; bottom: 15px; right: 15px; }
+            .scroll-progress-container { width: 2px; }
+
+            .t-input { padding: 20px; flex-direction: column; align-items: flex-start; gap: 10px; }
+            .t-input span { margin-right: 0; }
+        }
+
+        @media (max-width: 480px) {
+            .telemetry-grid { grid-template-columns: 1fr; }
+            .t-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+        }
+
+        /* DISABLE CUSTOM CURSOR & HOVER FX ON TOUCH DEVICES */
+        @media (hover: none) and (pointer: coarse) {
+            body, a, button, input, .nav-link, .magnetic-wrap { cursor: auto !important; }
+            #cursor-dot, #cursor-ring { display: none !important; }
+            .btn-svg { display: none; }
+            .btn-prime { border: 1px solid var(--cyan); }
+            .project-img { filter: grayscale(0%) contrast(1.1) !important; }
+            .3d-tilt { transform: none !important; }
+        }
+
     </style>
 </head>
 <body>
 
-    <div class="cursor-crosshair" id="crosshair"></div>
-    <canvas id="quantum-canvas"></canvas>
-    <div class="grid-overlay"></div>
-
-    <nav class="nav-container">
-        <button class="tab-btn active" onclick="navTab('core')">01_Core</button>
-        <button class="tab-btn" onclick="navTab('intel')">02_Intel</button>
-        <button class="tab-btn" onclick="navTab('constructs')">03_Constructs</button>
-        <button class="tab-btn" onclick="navTab('audio')">04_Audio</button>
-        <button class="tab-btn" onclick="navTab('terminal')">05_Terminal</button>
-    </nav>
-
-    <div id="core" class="section active">
-        <div class="glitch-wrapper">
-            <h1 class="glitch-text" data-text="Tejas Niranjan">Tejas Niranjan</h1>
-        </div>
-        
-        <div class="grid">
-            <div class="tilt-card">
-                <div class="card-content">
-                    <h2>Designation</h2>
-                    <p style="color: #fff; font-size: 1.2rem; margin-bottom: 10px;">> Robotics Developer</p>
-                    <p style="color: #fff; font-size: 1.2rem; margin-bottom: 10px;">> Software Engineer</p>
-                    <p style="color: #fff; font-size: 1.2rem;">> Pianist</p>
-                </div>
-            </div>
-            <div class="tilt-card">
-                <div class="card-content">
-                    <h2>Sys.Parameters</h2>
-                    <p><strong>Clearance:</strong> 8th Grade</p>
-                    <p><strong>Sector:</strong> Rani Laxmibai Public School, Jhansi</p>
-                    <p><strong>Optimization:</strong> Engineering logic for real-world systemic issues.</p>
-                </div>
-            </div>
-        </div>
+    <!-- PERSISTENT HUD -->
+    <div class="scanline"></div>
+    <div class="hud-grid"></div>
+    <div class="hud-overlay">
+        <div class="hud-corner hud-tl"></div>
+        <div class="hud-corner hud-tr"></div>
+        <div class="hud-corner hud-bl"></div>
+        <div class="hud-corner hud-br"></div>
     </div>
 
-    <div id="intel" class="section">
-        <h2 style="font-size: 2.5rem; margin-bottom: 30px;">SOF Olympiad Matrix</h2>
-        <table class="data-matrix">
-            <tr><th>Phase Level</th><th>Achievement Protocol</th></tr>
-            <tr><td>Grade 1 & 2</td><td><span class="highlight">Gold</span> [NSO] [IMO]</td></tr>
-            <tr><td>Grade 3</td><td><span class="highlight">Gold</span> [NSO] [IMO] [NCO]</td></tr>
-            <tr><td>Grade 4</td><td><span class="highlight">Gold</span> [NSO] [IMO] [NCO] [IEO]</td></tr>
-            <tr><td>Grade 5 & 6</td><td><span class="highlight">Gold</span> [NSO] [IMO]</td></tr>
-            <tr><td>Grade 7</td><td><span class="highlight">Gold</span> [NSO]</td></tr>
-        </table>
+    <!-- APEX UI ELEMENTS -->
+    <div class="scroll-progress-container"><div class="scroll-progress-bar" id="scroll-bar"></div></div>
+    <div class="hud-radar" id="hud-radar">
+        <div class="radar-sweep"></div>
+        <div class="radar-dot"></div>
+        <div class="radar-dot" style="top: 70%; left: 40%; animation-delay: 0.5s;"></div>
     </div>
 
-    <div id="constructs" class="section">
-        <h2 style="font-size: 2.5rem;">Deployed Architecture</h2>
-        <div class="grid">
-            <div class="tilt-card">
-                <div class="card-content">
-                    <h2>Car Parking Logic</h2>
-                    <p>Hardware/Software integration matrix. Real-time spatial monitoring utilizing physical sensors and code architecture.</p>
+    <!-- BOOT SEQUENCE PRELOADER -->
+    <div id="boot-screen">
+        <div class="boot-console" id="boot-console"></div>
+        <div class="boot-glitch" id="boot-glitch">TEJAS_OS_V12</div>
+    </div>
+
+    <!-- 3D WEBGL -->
+    <div id="webgl-container"></div>
+
+    <!-- MAGNETIC CURSOR -->
+    <div id="cursor-dot"></div>
+    <div id="cursor-ring"><span class="cursor-text" id="cursor-text">VIEW</span></div>
+
+    <!-- HEADER -->
+    <header>
+        <div class="logo-wrapper magnetic-wrap" data-cursor="ROOT">
+            <div class="logo-icon"></div>
+            <div class="logo">TEJAS_OS</div>
+        </div>
+        <nav class="nav-links">
+            <div class="magnetic-wrap" data-cursor="NAV"><a href="#telemetry" class="nav-link">Telemetry</a></div>
+            <div class="magnetic-wrap" data-cursor="NAV"><a href="#intel" class="nav-link">Academics</a></div>
+            <div class="magnetic-wrap" data-cursor="NAV"><a href="#projects" class="nav-link">Architecture</a></div>
+            <div class="magnetic-wrap" data-cursor="NAV"><a href="#terminal" class="nav-link">Terminal</a></div>
+        </nav>
+    </header>
+
+    <main>
+        <!-- SEC 1: HERO -->
+        <section class="hero" id="home">
+            <span class="section-tag">SYSTEM_ONLINE // V12.0_OMNI</span>
+            <div class="hero-title-wrap">
+                <h1 class="scramble-title outline" data-text="TEJAS">TEJAS</h1>
+                <h1 class="scramble-title" data-text="NIRANJAN">NIRANJAN</h1>
+            </div>
+            <p class="hero-desc">
+                8th Grade Robotics Engineer, Logic Architect, and Pianist based in Jhansi.<br>
+                Executing complex integrations across hardware microcontrollers, mathematical computation, and audio synthesis.
+            </p>
+            
+            <div class="btn-svg-wrap magnetic-wrap" data-cursor="EXEC">
+                <svg class="btn-svg" preserveAspectRatio="none" viewBox="0 0 200 60"><rect x="0" y="0" width="100%" height="100%"/></svg>
+                <a href="#projects" class="btn-prime">INITIALIZE_UPLINK</a>
+            </div>
+        </section>
+
+        <!-- SEC 2: SYSTEM TELEMETRY -->
+        <section class="telemetry" id="telemetry">
+            <span class="section-tag">DIAGNOSTICS: SYSTEM_TELEMETRY</span>
+            <div class="telemetry-grid">
+                <div class="stat-card">
+                    <div class="stat-num"><span class="counter" data-target="15">0</span><span class="plus">+</span></div>
+                    <div class="stat-label">Hardware Integrations</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num"><span class="counter" data-target="10000">0</span><span class="plus">+</span></div>
+                    <div class="stat-label">Lines of Code Deployed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num"><span class="counter" data-target="12">0</span><span class="plus">+</span></div>
+                    <div class="stat-label">SOF Gold Medals</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num"><span class="counter" data-target="3">0</span><span class="plus">+</span></div>
+                    <div class="stat-label">Published Arch. Projects</div>
                 </div>
             </div>
-            <div class="tilt-card">
-                <div class="card-content">
-                    <h2>IoT Auto-Irrigation</h2>
-                    <p>Autonomous environmental sustaining system. Nodes detect soil metrics and trigger hydration protocols.</p>
-                    <br><a href="https://tejasblynk.github.io/IoT-Based-Irrigation/" target="_blank">>> Initialize Uplink</a>
+        </section>
+
+        <!-- SEC 3: HORIZONTAL ACADEMICS TIMELINE -->
+        <section class="academics-container" id="intel">
+            <div class="academics-pin">
+                <div class="timeline-header">
+                    <span class="section-tag">DATABASE: SOF_OLYMPIADS</span>
+                    <h2 class="scramble-title" data-text="ACADEMIC" style="font-size: clamp(3rem, 6vw, 4rem);">ACADEMIC</h2>
+                    <h2 class="scramble-title outline" data-text="METRICS" style="font-size: clamp(3rem, 6vw, 4rem);">METRICS</h2>
+                    <p style="color: #ddd; margin-top: 20px; font-size: 1.1rem; max-width: 300px;">Scroll to traverse the chronological database of academic logic validations and metric achievements.</p>
+                </div>
+                
+                <div class="timeline-item 3d-tilt" data-cursor="READ">
+                    <span class="t-phase">PHASE 01 [GRADE 1-2]</span>
+                    <h3 class="t-title">Base Logic<br>Initialization</h3>
+                    <p class="t-desc">Achieved foundation-level mastery. Executed perfectly in both analytical mathematics and biological/science matrices.</p>
+                    <span class="t-medal">GOLD [NSO]</span> <span class="t-medal">GOLD [IMO]</span>
+                </div>
+                
+                <div class="timeline-item 3d-tilt" data-cursor="READ">
+                    <span class="t-phase">PHASE 02 [GRADE 3-4]</span>
+                    <h3 class="t-title">Quad-Core<br>Expansion</h3>
+                    <p class="t-desc">Scaled intelligence algorithms to process Cyber and Linguistics data. Flawless execution across four simultaneous academic domains.</p>
+                    <span class="t-medal">GOLD [NCO]</span> <span class="t-medal">GOLD [IEO]</span> <span class="t-medal">GOLD [NSO]</span> <span class="t-medal">GOLD [IMO]</span>
+                </div>
+                
+                <div class="timeline-item 3d-tilt" data-cursor="READ">
+                    <span class="t-phase">PHASE 03 [GRADE 5-7]</span>
+                    <h3 class="t-title">Algorithm<br>Optimization</h3>
+                    <p class="t-desc">Maintained top-tier status amidst exponentially increasing logic complexity. Continued validation of core scientific computing algorithms.</p>
+                    <span class="t-medal">GOLD [NSO]</span> <span class="t-medal">GOLD [IMO]</span>
+                </div>
+
+                <div class="timeline-item 3d-tilt" style="border-color: var(--cyan);" data-cursor="READ">
+                    <span class="t-phase" style="color: #fff;">PHASE 04 [GRADE 8]</span>
+                    <h3 class="t-title" style="color: var(--cyan);">Applied<br>Architecture</h3>
+                    <p class="t-desc">Transitioning theoretical computation into physical reality. Focus shifted to real-world hardware integration, OS development, and applied robotics.</p>
+                    <span class="t-medal" style="border-color: var(--cyan); color: var(--cyan); background: rgba(0,243,255,0.1);">ACTIVE_DEVELOPMENT</span>
+                </div>
+                
+                <div style="width: 10vw; flex-shrink: 0;"></div>
+            </div>
+        </section>
+
+        <!-- SEC 4: ARCHITECTURE PROJECTS -->
+        <section class="projects" id="projects">
+            <span class="section-tag">DIRECTORY: EXECUTABLE_BINS</span>
+            <h2 class="scramble-title" data-text="DEPLOYED" style="font-size: clamp(3rem, 8vw, 6rem);">DEPLOYED</h2>
+            <h2 class="scramble-title outline" data-text="ARCHITECTURE" style="font-size: clamp(3rem, 8vw, 6rem); margin-bottom: 100px;">ARCHITECTURE</h2>
+
+            <!-- Project 1 -->
+            <div class="project-card">
+                <div class="project-visual-wrap 3d-tilt" data-cursor="EXPAND">
+                    <div class="project-visual">
+                        <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80" alt="Hardware Circuit" class="project-img">
+                    </div>
+                    <div class="tech-marquee-wrap">
+                        <div class="tech-marquee">
+                            <span>ESP32</span><span>//</span><span>C++</span><span>//</span><span>SENSOR ARRAYS</span><span>//</span><span>LOGIC GATES</span><span>//</span><span>ESP32</span><span>//</span><span>C++</span><span>//</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="project-info">
+                    <span class="project-num">01</span>
+                    <h3 class="project-title scramble-title" data-text="CAR_PARKING_MATRIX">CAR_PARKING_MATRIX</h3>
+                    <p class="project-desc">A complex hardware-software integration designed to monitor spatial constraints. Utilizes physical sensor nodes mapped to a central logic core to manage vehicle arrays in real-time.</p>
+                    <div class="btn-svg-wrap magnetic-wrap" data-cursor="LOCK">
+                        <svg class="btn-svg" preserveAspectRatio="none" viewBox="0 0 200 60"><rect x="0" y="0" width="100%" height="100%"/></svg>
+                        <a href="#" class="btn-prime" style="color:var(--alert); border-color:var(--alert);">ACCESS_RESTRICTED</a>
+                    </div>
                 </div>
             </div>
-            <div class="tilt-card">
-                <div class="card-content">
-                    <h2>Neon Math OS</h2>
-                    <p>Dedicated calculation operating system. High-performance logic processing wrapped in a cybernetic UI.</p>
-                    <br><a href="https://tejasblynk.github.io/calculator/" target="_blank">>> Initialize Uplink</a>
+
+            <!-- Project 2 -->
+            <div class="project-card">
+                <div class="project-visual-wrap 3d-tilt" data-cursor="EXPAND">
+                    <div class="project-visual">
+                        <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1200&q=80" alt="Plant Lab" class="project-img">
+                    </div>
+                    <div class="tech-marquee-wrap" style="background: var(--purple); color: #fff;">
+                        <div class="tech-marquee">
+                            <span>NodeMCU ESP8266</span><span>//</span><span>IoT CLOUD</span><span>//</span><span>HYDRATION SENSORS</span><span>//</span><span>Blynk API</span><span>//</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="project-info">
+                    <span class="project-num">02</span>
+                    <h3 class="project-title scramble-title" data-text="IoT_AUTO_IRRIGATION">IoT_AUTO_IRRIGATION</h3>
+                    <p class="project-desc">Autonomous environmental sustaining system. Remote NodeMCU sensors detect exact soil metrics and autonomously trigger hydration protocols via cloud infrastructure.</p>
+                    <div class="btn-svg-wrap magnetic-wrap" data-cursor="EXEC">
+                        <svg class="btn-svg" preserveAspectRatio="none" viewBox="0 0 200 60"><rect x="0" y="0" width="100%" height="100%"/></svg>
+                        <a href="https://tejasblynk.github.io/IoT-Based-Irrigation/" target="_blank" class="btn-prime">EXECUTE_UPLINK ↗</a>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <div id="audio" class="section">
-        <div class="tilt-card" style="max-width: 800px; margin: 0 auto; text-align: center; padding: 60px;">
-            <div class="card-content">
-                <h2 style="font-size: 3rem; margin-bottom: 20px; border: none;">Synthesizer Link</h2>
-                <p style="font-size: 1.2rem; margin-bottom: 40px;">Transmitting harmonic frequencies globally.</p>
-                <a href="https://www.youtube.com/@tejasmusicalworld468" target="_blank" style="font-size: 1.5rem; border: 1px solid var(--gold); padding: 15px 30px; display: inline-block;">
-                    Connect to @tejasmusicalworld468
-                </a>
+            <!-- Project 3 -->
+            <div class="project-card">
+                <div class="project-visual-wrap 3d-tilt" data-cursor="EXPAND">
+                    <div class="project-visual">
+                        <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=80" alt="Cyber Math" class="project-img">
+                    </div>
+                    <div class="tech-marquee-wrap" style="background: var(--gold); color: #000;">
+                        <div class="tech-marquee">
+                            <span>HTML5</span><span>//</span><span>JS LOGIC</span><span>//</span><span>CSS3 NEON</span><span>//</span><span>MATH COMPUTATION</span><span>//</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="project-info">
+                    <span class="project-num">03</span>
+                    <h3 class="project-title scramble-title" data-text="NEON_MATH_OS">NEON_MATH_OS</h3>
+                    <p class="project-desc">A web-based operating system designed exclusively for complex computational logic, featuring a cybernetic graphical interface and high-speed execution.</p>
+                    <div class="btn-svg-wrap magnetic-wrap" data-cursor="EXEC">
+                        <svg class="btn-svg" preserveAspectRatio="none" viewBox="0 0 200 60"><rect x="0" y="0" width="100%" height="100%"/></svg>
+                        <a href="https://tejasblynk.github.io/calculator/" target="_blank" class="btn-prime">EXECUTE_UPLINK ↗</a>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
+        </section>
 
-    <div id="terminal" class="section">
-        <div class="terminal">
-            <div class="terminal-header">
-                <span>Node: Tejas_AI_Core</span>
-                <span>Status: Connected</span>
+        <!-- SEC 5: AUDIO -->
+        <section class="audio-sec" id="audio">
+            <div class="audio-bg-text">SYNTHESIS</div>
+            <span class="section-tag">FREQUENCY: HARMONIC_RESONANCE</span>
+            <h2 class="scramble-title" data-text="PIANIST" style="font-size: clamp(3rem, 7vw, 7rem);">PIANIST</h2>
+            <h2 class="scramble-title outline" data-text="SYNTHESIZER" style="font-size: clamp(3rem, 7vw, 7rem);">SYNTHESIZER</h2>
+            
+            <div class="visualizer" id="audio-vis"></div>
+            
+            <div class="btn-svg-wrap magnetic-wrap" data-cursor="PLAY" style="margin-top: 0;">
+                <svg class="btn-svg" preserveAspectRatio="none" viewBox="0 0 250 80"><rect x="0" y="0" width="100%" height="100%"/></svg>
+                <a href="https://www.youtube.com/@tejasmusicalworld468" target="_blank" class="btn-prime" style="padding: 30px 50px; font-size: 1.1rem; border-color: var(--purple); color: var(--purple);">CONNECT_CHANNEL ↗</a>
             </div>
-            <div class="terminal-body" id="chatBox">
-                <div class="msg sys-msg">System initialized. Awaiting commands...</div>
-            </div>
-            <div class="terminal-input">
-                <span>root@tejas:~#</span>
-                <input type="text" id="cmdInput" onkeypress="executeCmd(event)" autocomplete="off" autofocus>
-            </div>
-        </div>
-        
-        <div style="margin-top: 30px; text-align: center;">
-            <p>Direct Override Protocol: <a href="mailto:tejas.blynk@gmail.com">tejas.blynk@gmail.com</a></p>
-        </div>
-    </div>
+        </section>
 
+        <!-- SEC 6: INTERACTIVE TERMINAL -->
+        <section class="terminal-sec" id="terminal">
+            <div class="terminal-ui" data-cursor="TEXT">
+                <div class="t-header">
+                    <div class="t-dots"><div class="t-dot"></div><div class="t-dot"></div><div class="t-dot"></div></div>
+                    <span>root@tejas_os: ~</span>
+                </div>
+                <div class="t-body" id="term-body">
+                    <div class="msg-sys">TEJAS_OS [Version 12.0.0 Omni]</div>
+                    <div class="msg-sys">(c) 2026 Tejas Niranjan. All rights reserved.</div>
+                    <br>
+                    <div class="msg-sys">Initializing Neural Link... <span>[SUCCESS]</span></div>
+                    <div class="msg-sys">Type <span class="msg-cmd">'help'</span> to see available system commands.</div>
+                    <div class="msg-sys">Type any other query to contact the AI backend.</div>
+                    <br>
+                </div>
+                <div class="t-input">
+                    <span>root@tejas:~$</span>
+                    <input type="text" id="term-input" autocomplete="off" spellcheck="false" onkeypress="handleTerminal(event)">
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>TEJAS NIRANJAN &copy; <span id="year"></span> // DESIGNED FOR THE FUTURE.</p>
+    </footer>
+
+    <!-- --- JAVASCRIPT ARCHITECTURE --- -->
     <script>
-        // 1. Precise Crosshair Cursor
-        const cursor = document.getElementById('crosshair');
-        document.addEventListener('mousemove', e => {
-            cursor.style.left = e.clientX + 'px';
-            cursor.style.top = e.clientY + 'px';
-        });
+        document.getElementById('year').innerText = new Date().getFullYear();
 
-        // 2. Tab Navigation
-        function navTab(id) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            event.target.classList.add('active');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+        const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia("(pointer: coarse)").matches);
 
-        // 3. 3D Kinematic Tilt Effect (The Math)
-        const cards = document.querySelectorAll('.tilt-card');
-        cards.forEach(card => {
-            card.addEventListener('mousemove', e => {
-                const rect = card.getBoundingClientRect();
-                const x = e.clientX - rect.left; // x position within the element
-                const y = e.clientY - rect.top;  // y position within the element
-                
-                // Calculate rotation based on mouse position from center
-                const centerX = rect.width / 2;
-                const centerY = rect.height / 2;
-                
-                // The mathematical rotation vectors
-                const rotateX = ((y - centerY) / centerY) * -15; // Max 15deg tilt
-                const rotateY = ((x - centerX) / centerX) * 15;
-                
-                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
-            });
-
-            card.addEventListener('mouseleave', () => {
-                // Snap back to zero with smooth transition
-                card.style.transition = 'transform 0.5s ease-out';
-                card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
-                setTimeout(() => card.style.transition = '', 500); // Remove transition to prevent lag on re-enter
-            });
-        });
-
-        // 4. Quantum Canvas (Interactive Gravity Well)
-        const canvas = document.getElementById('quantum-canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-
-        let particles = [];
-        let mouse = { x: null, y: null, radius: 150 };
-
-        window.addEventListener('mousemove', e => { mouse.x = e.x; mouse.y = e.y; });
-        window.addEventListener('mouseout', () => { mouse.x = null; mouse.y = null; });
-
-        class Node {
-            constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 2;
-                this.baseX = this.x; this.baseY = this.y;
-                this.density = (Math.random() * 30) + 1;
-            }
-            draw() {
-                ctx.fillStyle = 'rgba(0, 255, 255, 0.8)';
-                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
-            }
-            update() {
-                // Physics: Mouse repulsion/attraction
-                let dx = mouse.x - this.x;
-                let dy = mouse.y - this.y;
-                let distance = Math.sqrt(dx * dx + dy * dy);
-                
-                let forceDirectionX = dx / distance;
-                let forceDirectionY = dy / distance;
-                let maxDistance = mouse.radius;
-                let force = (maxDistance - distance) / maxDistance;
-                let directionX = forceDirectionX * force * this.density;
-                let directionY = forceDirectionY * force * this.density;
-
-                if (distance < mouse.radius) {
-                    this.x -= directionX; // Change to += for attraction, -= for repulsion
-                    this.y -= directionY;
-                } else {
-                    if (this.x !== this.baseX) {
-                        let dx = this.x - this.baseX; this.x -= dx / 10;
-                    }
-                    if (this.y !== this.baseY) {
-                        let dy = this.y - this.baseY; this.y -= dy / 10;
-                    }
-                }
-                this.draw();
-            }
-        }
-
-        function initNodes() {
-            particles = [];
-            for (let i = 0; i < (canvas.width * canvas.height) / 9000; i++) particles.push(new Node());
-        }
+        // 1. BOOT SEQUENCE PRELOADER
+        const bootLines = [
+            "Mounting /dev/sda1...",
+            "Loading Neural Drivers [OK]",
+            "Initializing hardware matrix...",
+            "Checking ESP32 communication logs... [CLEAN]",
+            "Loading logic protocols (C++, Python)... [OK]",
+            "Bypassing standard GUI... Booting OMNI UI.",
+            "Establishing connection to Tejas Data Core...",
+            "Decrypting payload..."
+        ];
         
-        function animateNodes() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (let i = 0; i < particles.length; i++) {
-                particles[i].update();
-                for (let j = i; j < particles.length; j++) {
-                    let dx = particles[i].x - particles[j].x;
-                    let dy = particles[i].y - particles[j].y;
-                    let distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance < 100) {
-                        ctx.beginPath();
-                        ctx.strokeStyle = `rgba(188, 19, 254, ${1 - distance/100})`;
-                        ctx.lineWidth = 0.2;
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.stroke();
-                    }
+        const consoleEl = document.getElementById('boot-console');
+        let lineDelay = 120;
+        
+        function runBoot() {
+            let i = 0;
+            function addLine() {
+                if (i < bootLines.length) {
+                    const div = document.createElement('div');
+                    div.className = 'boot-line';
+                    div.innerText = `> ${bootLines[i]}`;
+                    consoleEl.appendChild(div);
+                    i++;
+                    setTimeout(addLine, lineDelay + Math.random() * 100);
+                } else {
+                    setTimeout(triggerGlitch, 400);
                 }
             }
-            requestAnimationFrame(animateNodes);
+            addLine();
         }
-        initNodes(); animateNodes();
-        window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; initNodes(); });
 
-        // 5. Terminal AI Link
-        async function executeCmd(e) {
-            if (e.key === 'Enter') {
-                const input = document.getElementById('cmdInput');
-                const cmd = input.value.trim();
-                if (!cmd) return;
+        function triggerGlitch() {
+            const glitch = document.getElementById('boot-glitch');
+            gsap.to(glitch, { opacity: 1, duration: 0.1, yoyo: true, repeat: 5 });
+            gsap.to("#boot-screen", { yPercent: -100, duration: 1.5, ease: "power4.inOut", delay: 0.8 });
+            setTimeout(() => { 
+                initScramble(); 
+                initTelemetry(); 
+                document.getElementById('hud-radar').style.display = 'block';
+                gsap.from('#hud-radar', { scale: 0, opacity: 0, duration: 1, ease: 'back.out(1.5)' });
+            }, 1500);
+        }
+        window.addEventListener('load', runBoot);
 
-                const box = document.getElementById('chatBox');
-                box.innerHTML += `<div class="msg usr-msg">${cmd}</div>`;
-                input.value = ''; box.scrollTop = box.scrollHeight;
+        // GLOBAL CLICK SHOCKWAVE
+        window.addEventListener('click', (e) => {
+            const wave = document.createElement('div');
+            wave.className = 'click-shockwave';
+            wave.style.left = e.clientX + 'px';
+            wave.style.top = e.clientY + 'px';
+            document.body.appendChild(wave);
+            gsap.fromTo(wave, { width: 0, height: 0, opacity: 1 }, { width: 120, height: 120, opacity: 0, duration: 0.6, ease: "power2.out", onComplete: () => wave.remove() });
+        });
 
-                const sysDiv = document.createElement('div');
-                sysDiv.className = 'msg sys-msg'; sysDiv.innerText = "Querying core database...";
-                box.appendChild(sysDiv); box.scrollTop = box.scrollHeight;
+        // 2. LENIS SMOOTH SCROLL & PROGRESS
+        const lenis = new Lenis({ duration: 1.2, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), direction: 'vertical', smooth: true });
+        const scrollBar = document.getElementById('scroll-bar');
+        
+        function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+        requestAnimationFrame(raf);
+        
+        lenis.on('scroll', (e) => {
+            ScrollTrigger.update();
+            const scrollProgress = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+            scrollBar.style.height = scrollProgress + '%';
+        });
+        gsap.ticker.add((time)=>{ lenis.raf(time * 1000) });
+        gsap.ticker.lagSmoothing(0);
+
+        // 3. ADVANCED MAGNETIC CURSOR
+        if (!isTouchDevice) {
+            const cursorDot = document.getElementById('cursor-dot');
+            const cursorRing = document.getElementById('cursor-ring');
+            const cursorText = document.getElementById('cursor-text');
+            let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
+            let ringX = mouseX, ringY = mouseY;
+
+            window.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX; mouseY = e.clientY;
+                cursorDot.style.left = mouseX + 'px'; cursorDot.style.top = mouseY + 'px';
+            });
+
+            gsap.ticker.add(() => {
+                ringX += (mouseX - ringX) * 0.15;
+                ringY += (mouseY - ringY) * 0.15;
+                cursorRing.style.left = ringX + 'px';
+                cursorRing.style.top = ringY + 'px';
+            });
+
+            document.querySelectorAll('[data-cursor]').forEach(el => {
+                el.addEventListener('mouseenter', () => {
+                    cursorText.innerText = el.getAttribute('data-cursor');
+                    gsap.to(cursorText, { opacity: 1, duration: 0.2 });
+                    gsap.to(cursorRing, { width: 80, height: 80, backgroundColor: "rgba(0,243,255,1)", mixBlendMode: "normal", borderColor: "transparent", duration: 0.3 });
+                    gsap.to(cursorDot, { scale: 0, duration: 0.2 });
+                });
+                el.addEventListener('mouseleave', () => {
+                    gsap.to(cursorText, { opacity: 0, duration: 0.2 });
+                    gsap.to(cursorRing, { width: 40, height: 40, backgroundColor: "transparent", mixBlendMode: "difference", borderColor: "rgba(0,243,255,0.5)", duration: 0.3 });
+                    gsap.to(cursorDot, { scale: 1, duration: 0.2 });
+                });
+            });
+        }
+
+        // 4. CRYPTOGRAPHIC SCRAMBLE
+        const chars = '!<>-_\\/[]{}—=+*^?#_01';
+        function scrambleText(element) {
+            const text = element.getAttribute('data-text');
+            if(!text) return;
+            let iteration = 0;
+            clearInterval(element.interval);
+            element.interval = setInterval(() => {
+                element.innerText = text.split('').map((letter, index) => {
+                    if(index < iteration) return text[index];
+                    return chars[Math.floor(Math.random() * chars.length)];
+                }).join('');
+                if(iteration >= text.length) clearInterval(element.interval);
+                iteration += 1 / 3;
+            }, 30);
+        }
+        function initScramble() {
+            document.querySelectorAll('.scramble-title').forEach(target => {
+                ScrollTrigger.create({ trigger: target, start: "top 85%", onEnter: () => scrambleText(target), once: true });
+            });
+        }
+
+        // 5. SYSTEM TELEMETRY
+        function initTelemetry() {
+            document.querySelectorAll('.counter').forEach(counter => {
+                ScrollTrigger.create({
+                    trigger: ".telemetry", start: "top 80%", once: true,
+                    onEnter: () => {
+                        gsap.to(counter, { innerHTML: +counter.getAttribute('data-target'), duration: 2.5, ease: "power3.out", snap: { innerHTML: 1 }, onUpdate: function() { counter.innerHTML = Math.ceil(this.targets()[0].innerHTML); }});
+                    }
+                });
+            });
+        }
+
+        // 6. HORIZONTAL SCROLL (GSAP PINNING)
+        const pinSection = document.querySelector('.academics-container');
+        const pinWrap = document.querySelector('.academics-pin');
+        
+        gsap.to(pinWrap, {
+            x: () => -(pinWrap.scrollWidth - window.innerWidth),
+            ease: "none",
+            scrollTrigger: { trigger: pinSection, pin: true, scrub: 1, end: () => `+=${pinWrap.scrollWidth - window.innerWidth}` }
+        });
+
+        // 7. KINEMATIC 3D PROJECT CARDS
+        if (!isTouchDevice) {
+            document.querySelectorAll('.3d-tilt').forEach(wrap => {
+                wrap.addEventListener('mousemove', (e) => {
+                    const rect = wrap.getBoundingClientRect();
+                    const xc = rect.width / 2; const yc = rect.height / 2;
+                    const dx = e.clientX - rect.left - xc; const dy = e.clientY - rect.top - yc;
+                    gsap.to(wrap, { rotationY: (dx / xc) * 10, rotationX: -(dy / yc) * 10, duration: 0.5, ease: "power2.out", transformPerspective: 1000 });
+                });
+                wrap.addEventListener('mouseleave', () => gsap.to(wrap, { rotationY: 0, rotationX: 0, duration: 1, ease: "elastic.out(1, 0.3)" }));
+            });
+        }
+
+        // 8. AUDIO VISUALIZER
+        const vis = document.getElementById('audio-vis');
+        for(let i=0; i< (window.innerWidth < 768 ? 20 : 40); i++) {
+            const bar = document.createElement('div');
+            bar.className = 'v-bar';
+            vis.appendChild(bar);
+            gsap.to(bar, { height: "random(20, 120)", duration: "random(0.2, 0.6)", repeat: -1, yoyo: true, ease: "power1.inOut", delay: "random(0, 0.5)" });
+        }
+
+        // 9. DUAL-GEOMETRY THREE.JS
+        const canvasContainer = document.getElementById('webgl-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x030305, 0.001);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 250;
+
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        canvasContainer.appendChild(renderer.domElement);
+
+        const geometry = new THREE.TorusKnotGeometry(90, 25, 300, 60);
+        const material = new THREE.PointsMaterial({ size: 1.5, color: 0x00f3ff, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending });
+        const torus = new THREE.Points(geometry, material);
+        scene.add(torus);
+
+        const coreGeometry = new THREE.IcosahedronGeometry(40, 1);
+        const coreMaterial = new THREE.MeshBasicMaterial({ color: 0xbc13fe, wireframe: true, transparent: true, opacity: 0.3 });
+        const innerCore = new THREE.Mesh(coreGeometry, coreMaterial);
+        scene.add(innerCore);
+
+        const clock = new THREE.Clock();
+        
+        gsap.to(torus.scale, { x: 1.5, y: 1.5, z: 1.5, scrollTrigger: { trigger: ".projects", start: "top bottom", end: "bottom top", scrub: true }});
+        gsap.to(innerCore.scale, { x: 2, y: 2, z: 2, scrollTrigger: { trigger: ".projects", start: "top bottom", end: "bottom top", scrub: true }});
+        gsap.to(material.color, { r: 188/255, g: 19/255, b: 254/255, scrollTrigger: { trigger: ".projects", start: "top center", end: "bottom center", scrub: true }});
+        gsap.to(coreMaterial.color, { r: 0, g: 243/255, b: 255/255, scrollTrigger: { trigger: ".projects", start: "top center", end: "bottom center", scrub: true }});
+
+        let mX = 0, mY = 0;
+        if(!isTouchDevice) {
+            window.addEventListener('mousemove', (e) => { mX = e.clientX; mY = e.clientY; });
+        }
+
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+            const time = clock.getElapsedTime();
+            
+            torus.rotation.x = time * 0.05 + (window.scrollY * 0.0001);
+            torus.rotation.y = time * 0.1 + (window.scrollY * 0.0001);
+            innerCore.rotation.x = -(time * 0.1) - (window.scrollY * 0.0002);
+            innerCore.rotation.y = -(time * 0.15) - (window.scrollY * 0.0002);
+            
+            camera.position.x += ((mX - window.innerWidth/2) * 0.1 - camera.position.x) * 0.05;
+            camera.position.y += (-(mY - window.innerHeight/2) * 0.1 - camera.position.y) * 0.05;
+            camera.lookAt(scene.position);
+
+            renderer.render(scene, camera);
+        }
+        animate3D();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // 10. HYBRID TERMINAL
+        const tBody = document.getElementById('term-body');
+        const commands = {
+            'help': 'Commands: <span>help</span>, <span>whoami</span>, <span>projects</span>, <span>clear</span>. For advanced queries, chat with the AI.',
+            'whoami': 'Entity: Tejas Niranjan. Designation: 8th Grade Hardware/Logic Architect.',
+            'projects': 'Active Bins: CAR_PARKING_MATRIX, IoT_AUTO_IRRIGATION, NEON_MATH_OS.',
+            'clear': 'CLEARING_CONSOLE'
+        };
+
+        async function handleTerminal(e) {
+            if(e.key === 'Enter') {
+                const input = document.getElementById('term-input');
+                const cmd = input.value.trim().toLowerCase();
+                if(!cmd) return;
+
+                tBody.innerHTML += `<div class="msg-usr"><span>root@tejas:~$</span> ${cmd}</div>`;
+                input.value = ''; tBody.scrollTop = tBody.scrollHeight;
+
+                if (commands[cmd]) {
+                    if (cmd === 'clear') { setTimeout(() => { tBody.innerHTML = ''; }, 200); return; }
+                    setTimeout(() => { tBody.innerHTML += `<div class="msg-sys">> ${commands[cmd]}</div>`; tBody.scrollTop = tBody.scrollHeight; }, 300);
+                    return;
+                }
+
+                const id = 'load-' + Date.now();
+                tBody.innerHTML += `<div class="msg-sys" id="${id}"><span>[AI_SYNC]</span> Processing uplink...</div>`;
+                tBody.scrollTop = tBody.scrollHeight;
 
                 try {
-                    const res = await fetch('http://localhost:3000/api/chat', {
-                        method: 'POST', headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ message: cmd })
-                    });
+                    const res = await fetch('http://localhost:3000/api/chat', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ message: cmd }) });
                     const data = await res.json();
-                    sysDiv.innerHTML = data.reply;
-                } catch (err) {
-                    sysDiv.innerText = "ERR_CONNECTION_REFUSED. Localhost server offline.";
+                    
+                    const targetDiv = document.getElementById(id);
+                    targetDiv.innerHTML = `<span style="color:var(--cyan);">[AI_CORE]</span> `;
+                    let i = 0;
+                    function type() {
+                        if (i < data.reply.length) { targetDiv.innerHTML += data.reply.charAt(i); i++; tBody.scrollTop = tBody.scrollHeight; setTimeout(type, 10); }
+                    }
+                    type();
+                } catch(err) {
+                    document.getElementById(id).innerHTML = `<span style="color:var(--alert);">[FATAL] Local Node.js server (Port 3000) offline. Cannot process query.</span>`;
                 }
-                box.scrollTop = box.scrollHeight;
             }
         }
     </script>
